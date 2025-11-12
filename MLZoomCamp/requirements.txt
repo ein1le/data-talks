@@ -21,4 +21,4 @@ ipykernel>=6.25.0
 
 # web
 Flask>=3.0.0
-gunicorn>=21.0.0
+waitress==3.0.2

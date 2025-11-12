@@ -1,79 +1,18 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ML Model Predictor</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: "Segoe UI", Roboto, sans-serif;
-            background: #f8f9fa;
-            margin: 0;
-            padding: 2rem;
-            color: #212529;
-        }
-        h1 {
-            text-align: center;
-            color: #0056b3;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        textarea {
-            width: 100%;
-            height: 200px;
-            font-family: monospace;
-            font-size: 0.95rem;
-            padding: 1rem;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            resize: vertical;
-        }
-        select, button {
-            padding: 0.6rem 1rem;
-            font-size: 1rem;
-            border-radius: 8px;
-            border: 1px solid #adb5bd;
-            background: #e9ecef;
-            cursor: pointer;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            margin-left: 0.5rem;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .response-box {
-            margin-top: 1.5rem;
-            background: #f1f3f5;
-            border-radius: 8px;
-            padding: 1rem;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 0.9rem;
-            border: 1px solid #dee2e6;
-        }
-        .footer {
-            margin-top: 2rem;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>MLZoomCamp MidTerm Prediction</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-    <h1>ML Model Prediction Service</h1>
-    <div class="container">
-        <p>Enter your JSON input below (single object or array):</p>
+  <h1>MLZoomCamp MidTerm Prediction</h1>
 
-        <textarea id="jsonInput" placeholder='{
+  <div class="container">
+    <p>Enter your JSON input below (single object or array):</p>
+
+    <textarea id="jsonInput" placeholder='{
   "Gender": "Male",
   "Ever_Married": "Yes",
   "Graduated": "No",
@@ -85,60 +24,23 @@
   "Var_1": "Cat_3"
 }'></textarea>
 
-        <div style="margin-top: 1rem;">
-            <label for="modelSelect">Select Model: </label>
-            <select id="modelSelect">
-                <option value="xgb">XGBoost</option>
-                <option value="logreg">Logistic Regression</option>
-            </select>
-            <button id="predictBtn">Predict</button>
-        </div>
-
-        <div class="response-box" id="responseBox">
-            Awaiting prediction...
-        </div>
+    <div class="controls">
+      <label for="modelSelect">Select Model: </label>
+      <select id="modelSelect">
+        <option value="xgb">XGBoost</option>
+        <option value="logreg">Logistic Regression</option>
+      </select>
+      <button id="predictBtn">Predict</button>
     </div>
 
-    <div class="footer">
-        Running on Flask &nbsp;|&nbsp; Press <b>Predict</b> to send request to <code>/predict</code>
-    </div>
+    <div class="response-box" id="responseBox">Awaiting prediction...</div>
+  </div>
 
-    <script>
-        document.getElementById("predictBtn").addEventListener("click", async () => {
-            const responseBox = document.getElementById("responseBox");
-            responseBox.textContent = "Processing...";
+  <div class="footer">
+    Running on Flask &nbsp;|&nbsp; Press <b>Predict</b> to send request to
+    <code>/predict</code>
+  </div>
 
-            const jsonText = document.getElementById("jsonInput").value.trim();
-            let jsonData;
-            try {
-                jsonData = JSON.parse(jsonText);
-            } catch (err) {
-                responseBox.textContent = "❌ Invalid JSON format.";
-                return;
-            }
-
-            const model = document.getElementById("modelSelect").value;
-
-            try {
-                const res = await fetch("/predict", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: model,
-                        data: jsonData
-                    })
-                });
-
-                const out = await res.json();
-                if (res.ok) {
-                    responseBox.textContent = JSON.stringify(out, null, 2);
-                } else {
-                    responseBox.textContent = "❌ Error: " + JSON.stringify(out, null, 2);
-                }
-            } catch (error) {
-                responseBox.textContent = "❌ Request failed: " + error;
-            }
-        });
-    </script>
+  <script src="./app.js"></script>
 </body>
 </html>

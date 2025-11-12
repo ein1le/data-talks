@@ -26,6 +26,14 @@ Development and Notebook Interaction
 
 uv pip install -r requirements.txt
 
+cd to script
+python train_logsitic.py \Path\to\train.csv
+python train_xgb.py \Path\to\train.csv
+
+python -m waitress --listen=0.0.0.0:8000 web_service.app:app
+
+
+
 
 Deployment 
 Docker
