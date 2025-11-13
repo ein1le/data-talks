@@ -1,16 +1,18 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>MLZoomCamp MidTerm Prediction</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="./styles.css" />
+    <meta charset="UTF-8">
+    <title>ML Model Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
-  <h1>MLZoomCamp MidTerm Prediction</h1>
+  <h1>MLZoomCamp MidTerm Prediction Model</h1>
 
   <div class="container">
-    <p>Enter your JSON input below (single object or array):</p>
+    <h4>Enter your JSON input below</h4>
 
     <textarea id="jsonInput" placeholder='{
   "Gender": "Male",
@@ -37,10 +39,9 @@
   </div>
 
   <div class="footer">
-    Running on Flask &nbsp;|&nbsp; Press <b>Predict</b> to send request to
-    <code>/predict</code>
+    Running on Flask
   </div>
 
-  <script src="./app.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>

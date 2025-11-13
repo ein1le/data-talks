@@ -22,24 +22,23 @@ from helper import (
 )
 
 # =========================
-# Defaults / Hyperparameters
+# Hyperparameters
 # =========================
-DEFAULT_RANDOM_STATE = 42
+DEFAULT_RANDOM_STATE = 23
 
-# Split ratios: 80% train, 10% val, 10% test
-DEFAULT_TEMP_SIZE = 0.20                       # full dataset portion to carve out for val+test
-DEFAULT_VAL_RATIO_WITHIN_TEMP = 0.50           # of the temp set, how much goes to VAL (rest to TEST)
+DEFAULT_TEMP_SIZE = 0.20      # 20% val + test
+DEFAULT_VAL_RATIO_WITHIN_TEMP = 0.50  # 10% val / 10% test
 
 # CV settings
 DEFAULT_CV_FOLDS = 5
 DEFAULT_SCORING = "accuracy"
 
-# XGBoost base params (fixed unless changed via grid)
+# XGBoost base params
 DEFAULT_OBJECTIVE = "multi:softprob"
 DEFAULT_EVAL_METRIC = "mlogloss"
 DEFAULT_N_JOBS = -1
 
-# XGBoost grid defaults
+# XGBoost CV Grid
 DEFAULT_MAX_DEPTHS: List[int] = [3, 4, 5, 6]
 DEFAULT_MIN_CHILD_WEIGHT: List[int] = [1, 3, 5]
 DEFAULT_LEARNING_RATES: List[float] = [0.03, 0.05, 0.1]
@@ -74,8 +73,7 @@ def split_train_val_test(
     random_state: int = DEFAULT_RANDOM_STATE,
 ):
     """
-    Split into: Train (1 - temp_size), Validation (temp_size * val_ratio_within_temp),
-                Test (temp_size * (1 - val_ratio_within_temp)).
+    Split into: Train, Val, Test.
     Stratified by y.
     """
     X_train, X_temp, y_train, y_temp = train_test_split(
@@ -93,8 +91,7 @@ def split_train_val_test(
 # =========================
 def encode_labels(y_train: pd.Series, y_val: pd.Series, y_test: pd.Series):
     """
-    Fit LabelEncoder on the union of train/val/test, transform each, and return:
-    (y_train_enc, y_val_enc, y_test_enc, label_encoder, num_classes)
+    Fit LabelEncoder on the union of train/val/test
     """
     le = LabelEncoder()
     le.fit(pd.concat([y_train, y_val, y_test], axis=0))
@@ -163,9 +160,7 @@ def xgb_train_cv(
     """
     cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
 
-    # -------------------------
     # Stage 1: tree structure
-    # -------------------------
     base_stage1 = XGBClassifier(
         objective=DEFAULT_OBJECTIVE,
         num_class=num_classes,
@@ -191,9 +186,7 @@ def xgb_train_cv(
     best_stage1 = grid1.best_params_
     # print(f"[XGB][Stage 1] {best_stage1}  score={grid1.best_score_:.4f}")
 
-    # -------------------------
     # Stage 2: learning dynamics
-    # -------------------------
     base_stage2 = XGBClassifier(
         objective=DEFAULT_OBJECTIVE,
         num_class=num_classes,
@@ -224,9 +217,7 @@ def xgb_train_cv(
     }
     # print(f"[XGB][Stage 2] {best_stage2}  score={grid2.best_score_:.4f}")
 
-    # -------------------------
     # Stage 3: regularization
-    # -------------------------
     base_stage3 = XGBClassifier(
         objective=DEFAULT_OBJECTIVE,
         num_class=num_classes,
@@ -259,9 +250,7 @@ def xgb_train_cv(
     }
     # print(f"[XGB][Stage 3] {best_stage3}  score={grid3.best_score_:.4f}")
 
-    # -------------------------
     # Final params & estimator
-    # -------------------------
     final_params = {
         **best_stage1,
         **best_stage2,
@@ -276,7 +265,7 @@ def xgb_train_cv(
         n_jobs=DEFAULT_N_JOBS,
         **final_params,
     )
-    # get a CV score for the final combined params (for reporting consistency)
+
     final_cv_scores = cross_val_score(
         final_estimator, Xtr_xgb, y_train_enc,
         scoring=scoring, cv=cv, n_jobs=-1
@@ -299,12 +288,11 @@ def xgb_train_cv(
 
 
 # =========================
-# 5) “Validate” (no predictions)
+# 5) Validation
 # =========================
 def xgb_validate(grid_xgb: GridSearchCV) -> dict:
     """
     Return the best params and best CV score from the fitted GridSearchCV.
-    (No predictions are made here.)
     """
     return {
         "cv_best_params": grid_xgb.best_params_,
@@ -313,7 +301,7 @@ def xgb_validate(grid_xgb: GridSearchCV) -> dict:
 
 
 # =========================
-# 6) Save final model (refit on train+val)
+# 6) Refitting on TRAIN+VAL and saving
 # =========================
 def save_model(
     grid_xgb: GridSearchCV,
@@ -450,7 +438,7 @@ if __name__ == "__main__":
     parser.add_argument("--random-state", type=int, default=DEFAULT_RANDOM_STATE, help="Random seed (default: 42).")
     parser.add_argument("--scoring", type=str, default=DEFAULT_SCORING, help="CV scoring metric (default: accuracy).")
 
-    # Grid lists (comma-separated CLI inputs)
+    # Grid lists 
     parser.add_argument("--max-depths", type=str, default=",".join(map(str, DEFAULT_MAX_DEPTHS)),
                         help=f"Comma-separated max_depth values (default: {','.join(map(str, DEFAULT_MAX_DEPTHS))}).")
     parser.add_argument("--min-child-weight", type=str, default=",".join(map(str, DEFAULT_MIN_CHILD_WEIGHT)),
@@ -474,7 +462,7 @@ if __name__ == "__main__":
         print(f"CSV not found: {args.csv_path}", file=sys.stderr)
         sys.exit(1)
 
-    # Parse comma-separated lists to proper Python lists
+    # Parse comma-separated lists to Python list
     max_depths = _parse_int_list(args.max_depths)
     min_child_weight = _parse_int_list(args.min_child_weight)
     learning_rates = _parse_float_list(args.learning_rates)

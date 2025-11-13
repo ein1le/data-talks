@@ -14,19 +14,23 @@ import time
 from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory
 
-# --- Make ../scripts importable ---
+# Import predict module from scripts/
 APP_DIR = Path(__file__).parent.resolve()
 SCRIPTS_DIR = (APP_DIR / "../scripts").resolve()
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
-# Import model predictor
 import predict as pm
 
+# -------------------------
 # Flask setup
+# -------------------------
+
+# app.py
 app = Flask(
     __name__,
     static_folder=str(APP_DIR),
+    static_url_path="",          
     template_folder=str(APP_DIR),
 )
 
@@ -35,6 +39,10 @@ app = Flask(
 def health():
     return jsonify(pm.get_status())
 
+
+@app.get("/static/<path:filename>")
+def static_files(filename):
+    return send_from_directory(str(APP_DIR), filename)
 
 @app.get("/")
 def index():
@@ -70,7 +78,7 @@ def predict_route():
     except Exception as e:
         return jsonify({"error": "Internal server error", "detail": str(e)}), 500
 
-
+# Main function for local testing
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
     app.run(host="0.0.0.0", port=port, debug=False)

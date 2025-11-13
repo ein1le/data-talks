@@ -27,9 +27,6 @@ from helper import (
 SCRIPT_DIR = Path(__file__).parent.resolve()
 REGISTRY_DIR = (SCRIPT_DIR / "../model_registry").resolve()
 
-# -----------------------
-# In-memory registry
-# -----------------------
 _MODELS: Dict[str, Dict[str, Any]] = {}
 
 
@@ -115,7 +112,6 @@ def load_models() -> Dict[str, Dict[str, Any]]:
     return models
 
 
-# Load once at startup
 _MODELS = load_models()
 
 

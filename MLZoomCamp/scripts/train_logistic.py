@@ -11,34 +11,30 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
 from sklearn.linear_model import LogisticRegression
 
-# <-- your helper module from the notebook
 from helper import (
     preprocess_pipeline_logreg,
     TARGET
 )
 
 # =========================
-# Defaults / Hyperparameters
+# Hyperparameters
 # =========================
-DEFAULT_RANDOM_STATE = 42
+DEFAULT_RANDOM_STATE = 45
 
-# Split ratios: 80% train, 10% val, 10% test
-DEFAULT_TEMP_SIZE = 0.20      # portion carved out of full dataset to later split into val & test
-DEFAULT_VAL_RATIO_WITHIN_TEMP = 0.50  # of the temp set, how much goes to VAL (the rest goes to TEST)
+DEFAULT_TEMP_SIZE = 0.20      # 20% val + test
+DEFAULT_VAL_RATIO_WITHIN_TEMP = 0.50  # 10% val / 10% test
 
-# CV settings
+# CV 
 DEFAULT_C_MIN_EXP = -3        # 1e-3
 DEFAULT_C_MAX_EXP = 2         # 1e+2
-DEFAULT_C_NUM = 12            # how many C values between 1e-3 and 1e+2
+DEFAULT_C_NUM = 12            # interval
 DEFAULT_CV_FOLDS = 5
 DEFAULT_SCORING = "balanced_accuracy"
 
-# Logistic Regression hyperparameters
+# Logistic Regression 
 DEFAULT_LR_SOLVER = "lbfgs"
 DEFAULT_LR_PENALTY = "l2"
 DEFAULT_LR_MAX_ITER = 1000
-# Leave multi_class=None to avoid sklearn deprecation warning;
-# if you want to force "multinomial", set it via CLI flag.
 DEFAULT_LR_MULTI_CLASS = None
 
 # Registry
@@ -57,8 +53,7 @@ def split_train_val_test(
     random_state: int = DEFAULT_RANDOM_STATE,
 ):
     """
-    Split into: Train (1 - temp_size), Validation (temp_size * val_ratio_within_temp),
-                Test (temp_size * (1 - val_ratio_within_temp)).
+    Split into: Train, Val, Test.
     Stratified by y.
     """
     X_train, X_temp, y_train, y_temp = train_test_split(
@@ -81,16 +76,16 @@ def logreg_preprocess(
 ):
     """
     Fit preprocessing on TRAIN only, then transform VAL and TEST.
-    Returns: Xtr_lr, Xva_lr, Xte_lr, lr_state
     """
     Xtr_lr, lr_state = preprocess_pipeline_logreg(X_train)          # FIT
     Xva_lr, _        = preprocess_pipeline_logreg(X_val,  lr_state) # TRANSFORM
     Xte_lr, _        = preprocess_pipeline_logreg(X_test, lr_state) # TRANSFORM
 
-    # Enforce index alignment (defensive)
+    # Enforce index alignment
     Xtr_lr = Xtr_lr.loc[X_train.index.intersection(Xtr_lr.index)]
     Xva_lr = Xva_lr.loc[X_val.index.intersection(Xva_lr.index)]
     Xte_lr = Xte_lr.loc[X_test.index.intersection(Xte_lr.index)]
+
     return Xtr_lr, Xva_lr, Xte_lr, lr_state
 
 
@@ -116,7 +111,6 @@ def logistic_train_cv(
     """
     C_values = np.logspace(c_min_exp, c_max_exp, num=c_num)
 
-    # Build model kwargs conditionally to avoid deprecation warnings
     model_kwargs = dict(
         solver=solver,
         penalty=penalty,
@@ -141,16 +135,16 @@ def logistic_train_cv(
         return_train_score=True
     )
     grid_lr.fit(Xtr_lr, y_train)
+
     return grid_lr
 
 
 # =========================
-# 4) “Validate” (no predictions)
+# 4) Validation
 # =========================
 def logistic_validate(grid_lr: GridSearchCV) -> dict:
     """
     Return the best params and best CV score from the fitted GridSearchCV.
-    (No predictions are made here.)
     """
     return {
         "cv_best_params": grid_lr.best_params_,
@@ -159,7 +153,7 @@ def logistic_validate(grid_lr: GridSearchCV) -> dict:
 
 
 # =========================
-# 5) Save final model (refit on train+val)
+# 5) Refitting on TRAIN+VAL and saving
 # =========================
 def save_model(
     grid_lr: GridSearchCV,
