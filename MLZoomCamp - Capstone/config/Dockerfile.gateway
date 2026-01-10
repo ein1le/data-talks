@@ -1,0 +1,29 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install Python dependencies for the gateway and gRPC client.
+RUN pip install --no-cache-dir \
+    flask \
+    grpcio \
+    tensorflow-serving-api \
+    tensorflow \
+    pillow \
+    numpy
+
+# Copy application code, frontend, and class names mapping.
+COPY scripts ./scripts
+COPY frontend ./frontend
+COPY model/class_names.json ./model/class_names.json
+
+# Default configuration for talking to the model service inside the cluster.
+ENV TF_SERVING_HOST=model-service \
+    TF_SERVING_PORT=8500 \
+    TF_SERVING_MODEL_NAME=vegetable-model \
+    GATEWAY_PORT=5000
+
+EXPOSE 5000
+
+CMD ["python", "scripts/gateway.py"]

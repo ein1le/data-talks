@@ -1,0 +1,9 @@
+FROM tensorflow/serving:2.13.0
+
+# Copy the exported SavedModel into the location expected by TF Serving.
+COPY model/v1 /models/vegetable-model/1
+
+ENV MODEL_NAME=vegetable-model
+
+EXPOSE 8500
+

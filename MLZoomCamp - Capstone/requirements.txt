@@ -1,0 +1,7 @@
+flask
+grpcio
+tensorflow-serving-api
+tensorflow
+Pillow
+numpy
+

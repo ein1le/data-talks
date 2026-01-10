@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-serving-model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tf-serving-model
+  template:
+    metadata:
+      labels:
+        app: tf-serving-model
+    spec:
+      containers:
+        - name: tf-serving-model
+          image: mlzoomcamp-capstone-model:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8500
+

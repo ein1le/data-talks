@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  model:
+    build:
+      context: .
+      dockerfile: config/Dockerfile.model
+    container_name: capstone-model
+    ports:
+      - "8500:8500"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: config/Dockerfile.gateway
+    container_name: capstone-gateway
+    depends_on:
+      - model
+    environment:
+      TF_SERVING_HOST: model
+      TF_SERVING_PORT: 8500
+      TF_SERVING_MODEL_NAME: vegetable-model
+      GATEWAY_PORT: 5000
+    ports:
+      - "5000:5000"
+

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: mlzoomcamp-capstone-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: TF_SERVING_HOST
+              value: "model-service"
+            - name: TF_SERVING_PORT
+              value: "8500"
+            - name: TF_SERVING_MODEL_NAME
+              value: "vegetable-model"
+            - name: GATEWAY_PORT
+              value: "5000"
+
